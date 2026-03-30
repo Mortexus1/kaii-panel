@@ -1030,117 +1030,118 @@
     { nick: "hs_1206", x: 26109, z: 13853 }
   ]
 };
+  const results = document.getElementById('results');
+  const searchInput = document.getElementById('searchInput');
+  const worldSelect = document.getElementById('worldSelect');
+  const sortSelect = document.getElementById('sortSelect');
+  const limitInput = document.getElementById('limitInput');
+  const searchBtn = document.getElementById('searchBtn');
+  const clearBtn = document.getElementById('clearBtn');
 
-    const results = document.getElementById('results');
-    const searchInput = document.getElementById('searchInput');
-    const worldSelect = document.getElementById('worldSelect');
-    const sortSelect = document.getElementById('sortSelect');
-    const limitInput = document.getElementById('limitInput');
-    const searchBtn = document.getElementById('searchBtn');
-    const clearBtn = document.getElementById('clearBtn');
+  function mesafeHesapla(x1, z1, x2, z2) {
+    return Math.sqrt((x2 - x1) ** 2 + (z2 - z1) ** 2);
+  }
 
-    function mesafeHesapla(x1, z1, x2, z2) {
-      return Math.sqrt((x2 - x1) ** 2 + (z2 - z1) ** 2);
+  function bosEkran(text = 'Sonuç bulunamadı.') {
+    results.innerHTML = `<div class="empty">${text}</div>`;
+  }
+
+  function dunyaAdiYazdir(world) {
+    return world.charAt(0).toUpperCase() + world.slice(1);
+  }
+
+  function sonucKartlariOlustur(veriler, world) {
+    if (!veriler.length) {
+      bosEkran();
+      return;
     }
 
-    function bosEkran(text = 'Sonuç bulunamadı.') {
-      results.innerHTML = `<div class="empty">${text}</div>`;
-    }
+    results.innerHTML = veriler.map(item => {
+      const distanceHTML = item.distance !== undefined
+        ? `<div class="badge">Mesafe: ${item.distance.toFixed(2)}</div>`
+        : `<div class="badge">Direkt eşleşme</div>`;
 
-    function sonucKartlariOlustur(veriler, world) {
-      if (!veriler.length) {
-        bosEkran();
-        return;
-      }
+      return `
+        <div class="result-card">
+          <div class="result-top">
+            <div class="nick">${item.nick}</div>
+            ${distanceHTML}
+          </div>
 
-      results.innerHTML = veriler.map(item => {
-        const koordinat = item[world];
-        const distanceHTML = item.distance !== undefined
-          ? `<div class="badge">Mesafe: ${item.distance.toFixed(2)}</div>`
-          : `<div class="badge">Direkt eşleşme</div>`;
-
-        return `
-          <div class="result-card">
-            <div class="result-top">
-              <div class="nick">${item.nick}</div>
-              ${distanceHTML}
+          <div class="meta">
+            <div class="meta-box">
+              <span>Dünya</span>
+              <strong>${dunyaAdiYazdir(world)}</strong>
             </div>
-
-            <div class="meta">
-              <div class="meta-box">
-                <span>Dünya</span>
-                <strong>${world.charAt(0).toUpperCase() + world.slice(1)}</strong>
-              </div>
-              <div class="meta-box">
-                <span>X</span>
-                <strong>${koordinat[0]}</strong>
-              </div>
-              <div class="meta-box">
-                <span>Z</span>
-                <strong>${koordinat[1]}</strong>
-              </div>
-              <div class="meta-box">
-                <span>Şifre</span>
-                <strong>${item.sifre}</strong>
-              </div>
+            <div class="meta-box">
+              <span>X</span>
+              <strong>${item.x}</strong>
+            </div>
+            <div class="meta-box">
+              <span>Z</span>
+              <strong>${item.z}</strong>
             </div>
           </div>
-        `;
-      }).join('');
+        </div>
+      `;
+    }).join('');
+  }
+
+  function sorgula() {
+    const query = searchInput.value.trim();
+    const world = worldSelect.value;
+    const sortType = sortSelect.value;
+    const limit = Math.max(1, Math.min(50, Number(limitInput.value) || 10));
+    const seciliDunya = hesaplar[world] || [];
+
+    if (!query) {
+      bosEkran('Bir hesap adı veya koordinat gir.');
+      return;
     }
 
-    function sorgula() {
-      const query = searchInput.value.trim();
-      const world = worldSelect.value;
-      const sortType = sortSelect.value;
-      const limit = Math.max(1, Math.min(50, Number(limitInput.value) || 5));
+    const isimSonucu = seciliDunya.filter(h =>
+      h.nick.toLowerCase().includes(query.toLowerCase())
+    );
 
-      if (!query) {
-        bosEkran('Bir hesap adı veya koordinat gir.');
-        return;
-      }
-
-      // İsim arama
-      const isimSonucu = hesaplar.filter(h => h.nick.toLowerCase().includes(query.toLowerCase()));
-      if (isimSonucu.length) {
-        sonucKartlariOlustur(isimSonucu.slice(0, limit), world);
-        return;
-      }
-
-      // X Z arama
-      const parts = query.replace(',', ' ').split(/\s+/).map(Number);
-      if (parts.length >= 2 && !Number.isNaN(parts[0]) && !Number.isNaN(parts[1])) {
-        const hedefX = parts[0];
-        const hedefZ = parts[1];
-
-        const hesaplanmis = hesaplar
-          .filter(h => Array.isArray(h[world]) && h[world].length === 2)
-          .map(h => ({
-            ...h,
-            distance: mesafeHesapla(hedefX, hedefZ, h[world][0], h[world][1])
-          }))
-          .sort((a, b) => sortType === 'closest' ? a.distance - b.distance : b.distance - a.distance)
-          .slice(0, limit);
-
-        sonucKartlariOlustur(hesaplanmis, world);
-        return;
-      }
-
-      bosEkran('İsim eşleşmedi. Koordinat için örnek giriş: 1200 -800');
+    if (isimSonucu.length) {
+      sonucKartlariOlustur(isimSonucu.slice(0, limit), world);
+      return;
     }
 
-    searchBtn.addEventListener('click', sorgula);
-    clearBtn.addEventListener('click', () => {
-      searchInput.value = '';
-      worldSelect.value = 'sancak';
-      sortSelect.value = 'closest';
-      limitInput.value = 5;
-      bosEkran('Temizlendi. Yeni sorgu girebilirsin.');
-    });
+    const parts = query.replace(/,/g, ' ').split(/\s+/).map(Number);
 
-    searchInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') sorgula();
-    });
+    if (parts.length >= 2 && !Number.isNaN(parts[0]) && !Number.isNaN(parts[1])) {
+      const hedefX = parts[0];
+      const hedefZ = parts[1];
+
+      const hesaplanmis = seciliDunya
+        .map(h => ({
+          ...h,
+          distance: mesafeHesapla(hedefX, hedefZ, h.x, h.z)
+        }))
+        .sort((a, b) => sortType === 'closest' ? a.distance - b.distance : b.distance - a.distance)
+        .slice(0, limit);
+
+      sonucKartlariOlustur(hesaplanmis, world);
+      return;
+    }
+
+    bosEkran('İsim eşleşmedi. Koordinat için örnek giriş: 1200 -800');
+  }
+
+  searchBtn.addEventListener('click', sorgula);
+
+  clearBtn.addEventListener('click', () => {
+    searchInput.value = '';
+    worldSelect.value = 'sancak';
+    sortSelect.value = 'closest';
+    limitInput.value = 10;
+    bosEkran('Temizlendi. Yeni sorgu girebilirsin.');
+  });
+
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sorgula();
+  });
   </script>
 </body>
 </html>

@@ -1030,6 +1030,38 @@
     { nick: "hs_1206", x: 26109, z: 13853 }
   ]
 };
+  const varsayilanHesaplar = {
+    sancak: [],
+    yakamoz: [],
+    avrasya: [],
+    pruva: [],
+    velena: [],
+    flador: [],
+    astra: []
+  };
+
+  function localdenHesaplariGetir() {
+    const kayitli = localStorage.getItem("kaii_hesaplar");
+    if (!kayitli) return varsayilanHesaplar;
+
+    try {
+      const parsed = JSON.parse(kayitli);
+      return {
+        sancak: parsed.sancak || [],
+        yakamoz: parsed.yakamoz || [],
+        avrasya: parsed.avrasya || [],
+        pruva: parsed.pruva || [],
+        velena: parsed.velena || [],
+        flador: parsed.flador || [],
+        astra: parsed.astra || []
+      };
+    } catch {
+      return varsayilanHesaplar;
+    }
+  }
+
+  let hesaplar = localdenHesaplariGetir();
+
   const results = document.getElementById('results');
   const searchInput = document.getElementById('searchInput');
   const worldSelect = document.getElementById('worldSelect');
@@ -1088,6 +1120,8 @@
   }
 
   function sorgula() {
+    hesaplar = localdenHesaplariGetir();
+
     const query = searchInput.value.trim();
     const world = worldSelect.value;
     const sortType = sortSelect.value;

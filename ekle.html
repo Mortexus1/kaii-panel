@@ -1,1 +1,211 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KAİİ Hesap Ekle</title>
+  <style>
+    * { box-sizing: border-box; }
 
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #0b1220;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .box {
+      width: 100%;
+      max-width: 600px;
+      background: #111a2e;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 24px;
+    }
+
+    h1 {
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: #b8c7e0;
+    }
+
+    input, select, button {
+      width: 100%;
+      min-height: 48px;
+      border-radius: 12px;
+      border: none;
+      padding: 0 14px;
+      font-size: 16px;
+    }
+
+    input, select {
+      background: #0a1324;
+      color: white;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    button {
+      background: linear-gradient(90deg, #11d9ff, #7c3aed);
+      color: #07111b;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .msg {
+      margin-top: 16px;
+      color: #9feeff;
+    }
+
+    .links {
+      margin-top: 18px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .links a {
+      color: #9feeff;
+      text-decoration: none;
+      background: #0a1324;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Hesap Ekle</h1>
+
+    <div class="form-group">
+      <label>Hesap İsmi</label>
+      <input type="text" id="nickInput" placeholder="Örn: DoubleLift" />
+    </div>
+
+    <div class="form-group">
+      <label>Dünya</label>
+      <select id="worldInput">
+        <option value="sancak">Sancak</option>
+        <option value="yakamoz">Yakamoz</option>
+        <option value="avrasya">Avrasya</option>
+        <option value="pruva">Pruva</option>
+        <option value="velena">Velena</option>
+        <option value="flador">Flador</option>
+        <option value="astra">Astra</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>X</label>
+      <input type="number" id="xInput" placeholder="Örn: 1200" />
+    </div>
+
+    <div class="form-group">
+      <label>Z</label>
+      <input type="number" id="zInput" placeholder="Örn: -800" />
+    </div>
+
+    <button id="ekleBtn">Hesap Ekle</button>
+
+    <div class="msg" id="msgBox"></div>
+
+    <div class="links">
+      <a href="index.html">Koordinat Paneline Git</a>
+    </div>
+  </div>
+
+  <script>
+    const ekleBtn = document.getElementById("ekleBtn");
+    const nickInput = document.getElementById("nickInput");
+    const worldInput = document.getElementById("worldInput");
+    const xInput = document.getElementById("xInput");
+    const zInput = document.getElementById("zInput");
+    const msgBox = document.getElementById("msgBox");
+
+    function varsayilanHesaplar() {
+      return {
+        sancak: [],
+        yakamoz: [],
+        avrasya: [],
+        pruva: [],
+        velena: [],
+        flador: [],
+        astra: []
+      };
+    }
+
+    function hesaplariGetir() {
+      const kayitli = localStorage.getItem("kaii_hesaplar");
+      if (!kayitli) return varsayilanHesaplar();
+
+      try {
+        const parsed = JSON.parse(kayitli);
+        return {
+          sancak: parsed.sancak || [],
+          yakamoz: parsed.yakamoz || [],
+          avrasya: parsed.avrasya || [],
+          pruva: parsed.pruva || [],
+          velena: parsed.velena || [],
+          flador: parsed.flador || [],
+          astra: parsed.astra || []
+        };
+      } catch {
+        return varsayilanHesaplar();
+      }
+    }
+
+    function hesaplariKaydet(veri) {
+      localStorage.setItem("kaii_hesaplar", JSON.stringify(veri));
+    }
+
+    ekleBtn.addEventListener("click", () => {
+      const nick = nickInput.value.trim();
+      const world = worldInput.value;
+      const x = Number(xInput.value);
+      const z = Number(zInput.value);
+
+      if (!nick) {
+        msgBox.textContent = "Hesap ismi gir.";
+        return;
+      }
+
+      if (Number.isNaN(x) || Number.isNaN(z)) {
+        msgBox.textContent = "X ve Z sayi olmali.";
+        return;
+      }
+
+      const veri = hesaplariGetir();
+
+      veri[world].push({
+        nick,
+        x,
+        z
+      });
+
+      hesaplariKaydet(veri);
+
+      msgBox.textContent = `${nick} başarıyla ${world} dünyasına eklendi.`;
+
+      nickInput.value = "";
+      xInput.value = "";
+      zInput.value = "";
+      nickInput.focus();
+    });
+  </script>
+</body>
+</html>
